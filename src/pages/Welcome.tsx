@@ -5,6 +5,7 @@ import { LanguageSwitch } from '../components/ui/LanguageSwitch'
 import { getLang } from '../lib/i18n'
 import { createUser, loginUser } from '../lib/supabase'
 import { t } from '../lib/i18n'
+import { Landscape } from '../components/ui/Landscape'
 
 type Mode = 'pick' | 'new' | 'login'
 
@@ -18,6 +19,7 @@ export function Welcome({ error, onSchool }: { error?: string | null; onSchool?:
       <LanguageSwitch />
       <h1>{t('קוראים בניקוד')}</h1>
       <p className="nikud-row">בַּ בִּ בָּ</p>
+      <Landscape />
       {error && <p className="error">{error}</p>}
 
       {mode === 'pick' && (
@@ -84,7 +86,11 @@ function NewUser({ onBack, onLogin }: { onBack?: () => void; onLogin: () => void
 
   return (
     <form className="panel account-form" onSubmit={submit}>
-      <h3>{t('משתמש חדש')}</h3>
+      <span className="stamp" aria-hidden="true">
+        {t('קורא חדש')}
+      </span>
+      <h3>{t('כרטיס קורא')}</h3>
+      <p className="muted form-sub">{t('משתמש חדש')}</p>
       <label>
         {t('שם')}
         <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="nickname" />
@@ -181,3 +187,4 @@ function Login({ onBack }: { onBack: () => void }) {
     </form>
   )
 }
+
