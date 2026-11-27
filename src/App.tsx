@@ -14,7 +14,8 @@ import { ContentPicker } from './components/ui/ContentPicker'
 import { TextPicker } from './components/ui/TextPicker'
 import { getLang, setLang, t } from './lib/i18n'
 import { setPronunciation } from './data/hebrew'
-import { currentAccount, switchAccount } from './lib/account'
+import { currentAccount, forgetAccount, switchAccount } from './lib/account'
+import { isDeviceToken, SchoolError } from './lib/school'
 import { ensureContent, refreshContent } from './lib/content'
 import { Selection, saveSelection } from './lib/selection'
 import { GameId, Home } from './pages/Home'
@@ -74,6 +75,11 @@ export default function App() {
 
   if (!account) return <SignIn />
   if (boot === 'loading') return <div className="game loading">…</div>
+  // A sign-in through an open school device ends with the school day: back to the front door.
+  if (boot === 'invalid' && isDeviceToken(account.code)) {
+    forgetAccount(account.id, false)
+    return <SignIn notice="device closed" />
+  }
   if (boot === 'invalid') return <Welcome error={t('לא הצלחנו להיכנס בתור {name}. אולי הקוד הוחלף או שאין חיבור — נסו להיכנס שוב.', { name: account.name })} />
 
   const home = () => setScreen({ kind: 'home' })
@@ -188,8 +194,8 @@ export default function App() {
 }
 
 /** Not signed in: the school's front door, or the regular sign-in for everyone else. */
-function SignIn() {
+function SignIn({ notice }: { notice?: SchoolError }) {
   const [other, setOther] = useState(false)
   if (other) return <Welcome onSchool={() => setOther(false)} />
-  return <SchoolEntry onOther={() => setOther(true)} />
+  return <SchoolEntry onOther={() => setOther(true)} notice={notice} />
 }

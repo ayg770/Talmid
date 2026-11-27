@@ -1,21 +1,25 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { rememberAccount, switchAccount } from '../lib/account'
+import { getAccounts, forgetAccount, rememberAccount, switchAccount } from '../lib/account'
 import { getLang } from '../lib/i18n'
 import {
   Roster,
   SchoolError,
   SchoolPerson,
+  Signed,
   cachedRoster,
-  forgetSchool,
-  getSchoolKey,
+  closeDevice,
+  enterStudent,
+  isDeviceToken,
   loadRoster,
+  openDevice,
   schoolFirstCode,
   schoolLogin,
 } from '../lib/school'
 
 // The school's front door. Everything is written in Hebrew and Russian together,
 // so nobody has to switch languages before signing in.
-// Classes → names (all on one screen, no scrolling) → personal code.
+// Classes → names (all on one screen, no scrolling). A teacher opens the device with
+// their code; then a student only taps their name.
 
 /** One text in both languages: Hebrew on top, Russian under it. */
 function Bi({ he, ru, className = '' }: { he: string; ru: string; className?: string }) {
@@ -31,53 +35,147 @@ function Bi({ he, ru, className = '' }: { he: string; ru: string; className?: st
   )
 }
 
-const ERRORS: Record<SchoolError, { he: string; ru: string }> = {
-  'bad school key': { he: 'קוד בית הספר לא נכון', ru: 'Неверный код школы' },
+const ERRORS: Record<SchoolError | 'mismatch', { he: string; ru: string }> = {
   'no code yet': { he: 'עוד אין קוד — בחרו קוד חדש', ru: 'Кода ещё нет — придумайте новый' },
   locked: { he: 'יותר מדי ניסיונות. נסו שוב בעוד 10 דקות', ru: 'Слишком много попыток. Попробуйте через 10 минут' },
   'wrong code': { he: 'הקוד לא נכון', ru: 'Неверный код' },
   'already has a code': { he: 'כבר נבחר קוד. הקלידו אותו', ru: 'Код уже выбран. Введите его' },
+  'device closed': { he: 'הכניסה נסגרה. מורה צריך לפתוח אותה שוב', ru: 'Вход закрыт. Учитель должен открыть его снова' },
   offline: { he: 'אין חיבור לשרת', ru: 'Нет связи с сервером' },
   other: { he: 'משהו השתבש, נסו שוב', ru: 'Что-то пошло не так, попробуйте ещё раз' },
+  mismatch: { he: 'הקודים לא זהים, נסו שוב', ru: 'Коды не совпадают, попробуйте снова' },
 }
 
 const TEACHERS = '__teachers__'
 
-type View = { kind: 'classes' } | { kind: 'names'; group: string } | { kind: 'code'; person: SchoolPerson }
+type View =
+  | { kind: 'classes' }
+  | { kind: 'names'; group: string }
+  | { kind: 'code'; person: SchoolPerson }
+  | { kind: 'teacher'; person: SchoolPerson; signed: Signed; code: string }
+  | { kind: 'ask-teacher'; person: SchoolPerson }
 
-export function SchoolEntry({ onOther }: { onOther: () => void }) {
+const asError = (e: unknown) => (typeof e === 'string' ? e : 'other') as SchoolError
+
+/** Sign in as this user on this device. Sign-ins through an open device replace each other. */
+function signIn(signed: Signed, code: string) {
+  if (isDeviceToken(code)) {
+    for (const a of getAccounts()) if (isDeviceToken(a.code)) forgetAccount(a.id, false)
+  }
+  rememberAccount({ id: signed.id, name: signed.name, code })
+  switchAccount(signed.id)
+}
+
+export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?: SchoolError | null }) {
   const [roster, setRoster] = useState<Roster | null>(cachedRoster)
-  const [needKey, setNeedKey] = useState(!getSchoolKey())
+  const [failed, setFailed] = useState(false)
   const [view, setView] = useState<View>({ kind: 'classes' })
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<SchoolError | null>(notice ?? null)
 
-  // Refresh the list in the background (new students, codes chosen on other devices).
-  useEffect(() => {
-    const key = getSchoolKey()
-    if (!key) return
-    loadRoster(key)
-      .then(setRoster)
-      .catch((e: SchoolError) => {
-        if (e === 'bad school key') {
-          forgetSchool()
-          setRoster(null)
-          setNeedKey(true)
-        }
+  const refresh = () =>
+    loadRoster()
+      .then((r) => {
+        setRoster(r)
+        setFailed(false)
       })
+      .catch(() => setFailed(true))
+
+  // Refresh in the background (new students, the device opened or closed elsewhere).
+  useEffect(() => {
+    void refresh()
   }, [])
 
-  if (needKey || !roster)
+  if (!roster)
     return (
-      <SchoolKey
-        onDone={(r) => {
-          setRoster(r)
-          setNeedKey(false)
-        }}
-        onOther={onOther}
+      <div className="school school-classes">
+        {failed ? (
+          <>
+            <Bi he={ERRORS.offline.he} ru={ERRORS.offline.ru} className="error" />
+            <button className="btn primary" onClick={() => void refresh()}>
+              <Bi he="נסו שוב" ru="Повторить" />
+            </button>
+          </>
+        ) : (
+          <div className="muted">…</div>
+        )}
+      </div>
+    )
+
+  const open = roster.open
+  const back = () => setView({ kind: 'classes' })
+
+  if (view.kind === 'code')
+    return (
+      <CodePad
+        person={view.person}
+        onBack={() => setView({ kind: 'names', group: view.person.class ?? TEACHERS })}
+        onSigned={(signed, code) =>
+          view.person.kind === 'teacher' ? setView({ kind: 'teacher', person: view.person, signed, code }) : signIn(signed, code)
+        }
       />
     )
 
-  if (view.kind === 'code')
-    return <CodePad person={view.person} onBack={() => setView({ kind: 'names', group: view.person.class ?? TEACHERS })} />
+  if (view.kind === 'teacher')
+    return (
+      <div className="school school-choice">
+        <div className="school-bar">
+          <button className="school-back" onClick={back}>
+            <Bi he="→ חזרה" ru="← Назад" />
+          </button>
+        </div>
+        <div className="code-who" dir="auto">
+          {view.person.name}
+        </div>
+        <button
+          className="choice-big open-choice"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true)
+            try {
+              await openDevice(view.person.id, view.code)
+              await refresh()
+              setError(null)
+              back()
+            } catch (e) {
+              setError(asError(e))
+            }
+            setBusy(false)
+          }}
+        >
+          <Bi he="🔓 לפתוח את הכניסה לתלמידים" ru="🔓 Открыть вход для учеников" />
+          <Bi he="במכשיר הזה, עד סוף היום" ru="на этом устройстве, до конца дня" className="choice-sub" />
+        </button>
+        <button className="choice-big" disabled={busy} onClick={() => signIn(view.signed, view.code)}>
+          <Bi he="להיכנס בעצמי" ru="Войти самому" />
+        </button>
+        {error && <Bi he={ERRORS[error].he} ru={ERRORS[error].ru} className="error" />}
+      </div>
+    )
+
+  if (view.kind === 'ask-teacher')
+    return (
+      <div className="school school-choice">
+        <div className="school-bar">
+          <button className="school-back" onClick={() => setView({ kind: 'names', group: view.person.class ?? TEACHERS })}>
+            <Bi he="→ חזרה" ru="← Назад" />
+          </button>
+        </div>
+        <div className="code-who" dir="auto">
+          {view.person.name}
+        </div>
+        <div className="ask-teacher">🔒</div>
+        <Bi he="הכניסה לתלמידים עוד סגורה. בקשו מהמורה לפתוח אותה" ru="Вход для учеников закрыт. Попросите учителя открыть его" className="code-prompt" />
+        <button className="class-tile teacher-tile" onClick={() => setView({ kind: 'names', group: TEACHERS })}>
+          <Bi he="כניסת מורה" ru="Вход для учителя" />
+        </button>
+        {view.person.has_code && (
+          <button className="link" onClick={() => setView({ kind: 'code', person: view.person })}>
+            <Bi he="יש לי קוד אישי" ru="У меня есть личный код" />
+          </button>
+        )}
+      </div>
+    )
 
   if (view.kind === 'names') {
     const people = roster.people.filter((p) =>
@@ -85,17 +183,37 @@ export function SchoolEntry({ onOther }: { onOther: () => void }) {
     )
     const cls = roster.classes.find((c) => c.id === view.group)
     const title = cls ? { he: `כיתה ${cls.he}׳`, ru: `${cls.ru} класс` } : { he: 'מורים', ru: 'Учителя' }
+
+    const tap = async (p: SchoolPerson) => {
+      if (p.kind === 'teacher') return setView({ kind: 'code', person: p })
+      if (!open) return setView({ kind: 'ask-teacher', person: p })
+      setBusy(true)
+      try {
+        const signed = await enterStudent(p.id, getLang())
+        signIn(signed, signed.token!)
+      } catch (e) {
+        setBusy(false)
+        const err = asError(e)
+        setError(err)
+        if (err === 'device closed') {
+          await refresh()
+          back()
+        }
+      }
+    }
+
     return (
       <div className="school school-names">
         <div className="school-bar">
-          <button className="school-back" onClick={() => setView({ kind: 'classes' })}>
+          <button className="school-back" onClick={back}>
             <Bi he="→ חזרה" ru="← Назад" />
           </button>
           <Bi he={title.he} ru={title.ru} className="school-title" />
+          {error && <Bi he={ERRORS[error].he} ru={ERRORS[error].ru} className="error" />}
         </div>
-        <FitGrid count={people.length}>
+        <FitGrid count={people.length} longest={Math.max(...people.map((p) => p.name.length), 4)}>
           {people.map((p) => (
-            <button key={p.id} className="school-name" onClick={() => setView({ kind: 'code', person: p })}>
+            <button key={p.id} className="school-name" disabled={busy} onClick={() => void tap(p)}>
               <span dir="auto">{p.name}</span>
             </button>
           ))}
@@ -106,17 +224,49 @@ export function SchoolEntry({ onOther }: { onOther: () => void }) {
 
   return (
     <div className="school school-classes">
+      {open ? (
+        <div className="open-bar">
+          <Bi he={`🔓 הכניסה פתוחה לתלמידים עד סוף היום — נפתחה ע״י ${open.teacher}`} ru={`🔓 Вход для учеников открыт до конца дня — открыл(а) ${open.teacher}`} />
+          <button
+            className="close-btn"
+            onClick={async () => {
+              await closeDevice()
+              await refresh()
+            }}
+          >
+            <Bi he="לסגור" ru="Закрыть" />
+          </button>
+        </div>
+      ) : (
+        <div className="open-bar closed">
+          <Bi he="🔒 הכניסה לתלמידים סגורה — מורה פותח אותה עם הקוד שלו" ru="🔒 Вход для учеников закрыт — учитель открывает его своим кодом" />
+        </div>
+      )}
       <Bi he="מי נכנס? בחרו כיתה" ru="Кто входит? Выберите класс" className="school-title" />
+      {error && <Bi he={ERRORS[error].he} ru={ERRORS[error].ru} className="error" />}
       <div className="class-grid">
         {roster.classes.map((c) => (
-          <button key={c.id} className="class-tile" onClick={() => setView({ kind: 'names', group: c.id })}>
+          <button
+            key={c.id}
+            className="class-tile"
+            onClick={() => {
+              setError(null)
+              setView({ kind: 'names', group: c.id })
+            }}
+          >
             <span className="class-letter">{c.he}</span>
             <Bi he={`כיתה ${c.he}׳`} ru={`${c.ru} класс`} />
           </button>
         ))}
       </div>
       <div className="school-foot">
-        <button className="class-tile teacher-tile" onClick={() => setView({ kind: 'names', group: TEACHERS })}>
+        <button
+          className="class-tile teacher-tile"
+          onClick={() => {
+            setError(null)
+            setView({ kind: 'names', group: TEACHERS })
+          }}
+        >
           <Bi he="כניסת מורה" ru="Вход для учителя" />
         </button>
         <button className="link" onClick={onOther}>
@@ -131,7 +281,7 @@ export function SchoolEntry({ onOther }: { onOther: () => void }) {
  * Lays the names out in as many columns as needed so they all fit on the screen
  * without scrolling, with the largest text that still fits.
  */
-function FitGrid({ count, children }: { count: number; children: React.ReactNode }) {
+function FitGrid({ count, longest, children }: { count: number; longest: number; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
   const [layout, setLayout] = useState({ cols: 3, font: 22 })
 
@@ -141,14 +291,14 @@ function FitGrid({ count, children }: { count: number; children: React.ReactNode
       if (!el || count === 0) return
       const W = el.clientWidth
       const H = el.clientHeight
-      const gap = 8
-      let best = { cols: 1, font: 12 }
-      // Try every column count; keep the one that gives the tallest cells (a name ≈ 4:1).
+      const gap = 10
+      let best = { cols: 1, font: 10 }
       for (let cols = 1; cols <= Math.min(count, 8); cols++) {
         const rows = Math.ceil(count / cols)
         const w = (W - gap * (cols - 1)) / cols
         const h = (H - gap * (rows - 1)) / rows
-        const font = Math.min(h * 0.42, w / 7.5, 40)
+        // Hebrew letters are about 0.55em wide; leave room for the padding.
+        const font = Math.min(h * 0.42, (w - 16) / (longest * 0.55), 44)
         if (font > best.font) best = { cols, font }
       }
       setLayout({ cols: best.cols, font: Math.floor(best.font) })
@@ -156,7 +306,7 @@ function FitGrid({ count, children }: { count: number; children: React.ReactNode
     fit()
     window.addEventListener('resize', fit)
     return () => window.removeEventListener('resize', fit)
-  }, [count])
+  }, [count, longest])
 
   const rows = Math.ceil(count / layout.cols)
   return (
@@ -174,8 +324,16 @@ function FitGrid({ count, children }: { count: number; children: React.ReactNode
   )
 }
 
-/** Personal code: typed on big digit buttons. The first time, chosen and typed twice. */
-function CodePad({ person, onBack }: { person: SchoolPerson; onBack: () => void }) {
+/** Personal code on big digit buttons. The first time (teachers), chosen and typed twice. */
+function CodePad({
+  person,
+  onBack,
+  onSigned,
+}: {
+  person: SchoolPerson
+  onBack: () => void
+  onSigned: (signed: Signed, code: string) => void
+}) {
   const [isNew, setIsNew] = useState(!person.has_code)
   const [code, setCode] = useState('')
   const [first, setFirst] = useState<string | null>(null)
@@ -183,7 +341,6 @@ function CodePad({ person, onBack }: { person: SchoolPerson; onBack: () => void 
   const [busy, setBusy] = useState(false)
 
   const enter = async (value: string) => {
-    if (busy) return
     setError(null)
     if (isNew && first === null) {
       setFirst(value)
@@ -199,10 +356,9 @@ function CodePad({ person, onBack }: { person: SchoolPerson; onBack: () => void 
     setBusy(true)
     try {
       const signed = isNew ? await schoolFirstCode(person.id, value, getLang()) : await schoolLogin(person.id, value)
-      rememberAccount({ id: signed.id, name: signed.name, code: value })
-      switchAccount(signed.id)
+      onSigned(signed, value)
     } catch (e) {
-      const err = (typeof e === 'string' ? e : 'other') as SchoolError
+      const err = asError(e)
       if (err === 'no code yet') setIsNew(true)
       if (err === 'already has a code') setIsNew(false)
       setFirst(null)
@@ -222,9 +378,9 @@ function CodePad({ person, onBack }: { person: SchoolPerson; onBack: () => void 
   const prompt = !isNew
     ? { he: 'הקלידו את הקוד שלכם', ru: 'Введите свой код' }
     : first === null
-      ? { he: 'בחרו קוד חדש — 4 ספרות', ru: 'Придумайте код — 4 цифры' }
+      ? { he: 'פעם ראשונה: בחרו קוד — 4 ספרות', ru: 'Первый вход: придумайте код — 4 цифры' }
       : { he: 'הקלידו את הקוד שוב', ru: 'Введите код ещё раз' }
-  const err = error === 'mismatch' ? { he: 'הקודים לא זהים, נסו שוב', ru: 'Коды не совпадают, попробуйте снова' } : error && ERRORS[error]
+  const err = error && ERRORS[error]
 
   return (
     <div className="school school-code">
@@ -258,49 +414,6 @@ function CodePad({ person, onBack }: { person: SchoolPerson; onBack: () => void 
         <span />
       </div>
       {busy && <div className="muted">…</div>}
-    </div>
-  )
-}
-
-/** Once per device: the school key opens the class list. */
-function SchoolKey({ onDone, onOther }: { onDone: (r: Roster) => void; onOther: () => void }) {
-  const [key, setKey] = useState('')
-  const [error, setError] = useState<SchoolError | null>(null)
-  const [busy, setBusy] = useState(false)
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setBusy(true)
-    setError(null)
-    try {
-      onDone(await loadRoster(key.trim()))
-    } catch (err) {
-      setError((typeof err === 'string' ? err : 'other') as SchoolError)
-      setBusy(false)
-    }
-  }
-
-  return (
-    <div className="school school-key">
-      <Bi he="כניסה לתלמידי בית הספר" ru="Вход для учеников школы" className="school-title" />
-      <form className="panel key-form" onSubmit={submit}>
-        <Bi he="קוד בית הספר (פעם אחת במכשיר הזה)" ru="Код школы (один раз на этом устройстве)" />
-        <input
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          inputMode="numeric"
-          autoComplete="off"
-          dir="ltr"
-          className="key-input"
-        />
-        {error && <Bi he={ERRORS[error].he} ru={ERRORS[error].ru} className="error" />}
-        <button className="btn primary" disabled={busy || key.trim().length < 4}>
-          {busy ? '…' : <Bi he="המשך" ru="Далее" />}
-        </button>
-      </form>
-      <button className="link" onClick={onOther}>
-        <Bi he="אני לא מבית הספר" ru="Я не из школы" />
-      </button>
     </div>
   )
 }

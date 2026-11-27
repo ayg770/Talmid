@@ -64,8 +64,14 @@ export function switchAccount(id: string | null) {
 }
 
 /** Forget an account on this device (the user and their data stay on the server). */
-export function forgetAccount(id: string) {
+export function forgetAccount(id: string, reload = true) {
   accounts = accounts.filter((a) => a.id !== id)
   write(ACCOUNTS_KEY, accounts)
-  if (currentId === id) switchAccount(null)
+  if (currentId === id) {
+    if (reload) switchAccount(null)
+    else {
+      currentId = null
+      write(CURRENT_KEY, null)
+    }
+  }
 }
