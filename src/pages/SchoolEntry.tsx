@@ -272,6 +272,11 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
       )}
       <Bi he="מי נכנס? בחרו כיתה" ru="Кто входит? Выберите класс" className="school-title" />
       {error && <Bi he={ERRORS[error].he} ru={ERRORS[error].ru} className="error" />}
+      <div className="school-frame">
+        <div className="school-badge">
+          <span className="he">חדר מנחם · מוסקבה</span>
+          <span className="ru">Хедер Менахем · Москва</span>
+        </div>
       <div className="class-grid">
         {roster.classes.map((c) => (
           <button
@@ -297,6 +302,9 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
         >
           <Bi he="כניסת מורה" ru="Вход для учителя" />
         </button>
+      </div>
+      </div>
+      <div className="school-foot other">
         <button className="link" onClick={onOther}>
           <Bi he="כניסה אחרת" ru="Другой вход" />
         </button>
