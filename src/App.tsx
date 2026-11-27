@@ -21,6 +21,8 @@ import { Selection, saveSelection } from './lib/selection'
 import { GameId, Home } from './pages/Home'
 import { Settings } from './pages/Settings'
 import { Welcome } from './pages/Welcome'
+import { StudentHome } from './pages/StudentHome'
+import { MyHome, myHome } from './lib/portal'
 import { SchoolEntry } from './pages/SchoolEntry'
 import { getLearner } from './lib/supabase'
 
@@ -38,6 +40,7 @@ const LESSON_MINUTES = 3
 const isPicked = (g: GameId): g is PickedGame => g in TITLES
 
 type Screen =
+  | { kind: 'portal' }
   | { kind: 'home' }
   | { kind: 'settings' }
   | { kind: 'pick'; game: PickedGame }
@@ -52,6 +55,7 @@ type Screen =
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ kind: 'home' })
+  const [portal, setPortal] = useState<MyHome | null>(null)
   const [run, setRun] = useState(0)
   const account = currentAccount()
   const [boot, setBoot] = useState<'loading' | 'ready' | 'invalid'>(account ? 'loading' : 'ready')
@@ -69,7 +73,12 @@ export default function App() {
       }
       setPronunciation(learner.pronunciation)
       void ensureContent()
-      setBoot('ready')
+      // School users start at their home screen (what the admin opened for them).
+      void myHome().then((h) => {
+        setPortal(h)
+        if (h) setScreen({ kind: 'portal' })
+        setBoot('ready')
+      })
     })
   }, [account])
 
@@ -83,6 +92,16 @@ export default function App() {
   if (boot === 'invalid') return <Welcome error={t('לא הצלחנו להיכנס בתור {name}. אולי הקוד הוחלף או שאין חיבור — נסו להיכנס שוב.', { name: account.name })} />
 
   const home = () => setScreen({ kind: 'home' })
+
+  if (screen.kind === 'portal' && portal)
+    return (
+      <StudentHome
+        home={portal}
+        userId={account.id}
+        onReading={home}
+        onSwitchUser={() => switchAccount(null)}
+      />
+    )
 
   if (screen.kind === 'settings')
     return (
@@ -189,6 +208,7 @@ export default function App() {
       onLesson={(unit) => setScreen({ kind: 'lesson', unit })}
       onSettings={() => setScreen({ kind: 'settings' })}
       onSwitchUser={() => switchAccount(null)}
+      onPortal={portal ? () => setScreen({ kind: 'portal' }) : undefined}
     />
   )
 }

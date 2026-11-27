@@ -1,6 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { getAccounts, forgetAccount, rememberAccount, switchAccount } from '../lib/account'
 import { getLang } from '../lib/i18n'
+import { Bi } from '../components/ui/Bi'
+import { AdminPanel } from './AdminPanel'
+import { adminLogin } from '../lib/portal'
 import {
   Roster,
   SchoolError,
@@ -21,20 +24,6 @@ import {
 // Classes → names (all on one screen, no scrolling). A teacher opens the device with
 // their code; then a student only taps their name.
 
-/** One text in both languages: Hebrew on top, Russian under it. */
-function Bi({ he, ru, className = '' }: { he: string; ru: string; className?: string }) {
-  return (
-    <span className={`bi ${className}`}>
-      <span className="bi-he" dir="rtl">
-        {he}
-      </span>
-      <span className="bi-ru" dir="ltr">
-        {ru}
-      </span>
-    </span>
-  )
-}
-
 const ERRORS: Record<SchoolError | 'mismatch', { he: string; ru: string }> = {
   'no code yet': { he: 'עוד אין קוד — בחרו קוד חדש', ru: 'Кода ещё нет — придумайте новый' },
   locked: { he: 'יותר מדי ניסיונות. נסו שוב בעוד 10 דקות', ru: 'Слишком много попыток. Попробуйте через 10 минут' },
@@ -54,6 +43,7 @@ type View =
   | { kind: 'code'; person: SchoolPerson }
   | { kind: 'teacher'; person: SchoolPerson; signed: Signed; code: string }
   | { kind: 'ask-teacher'; person: SchoolPerson }
+  | { kind: 'admin' }
 
 const asError = (e: unknown) => (typeof e === 'string' ? e : 'other') as SchoolError
 
@@ -116,6 +106,8 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
       />
     )
 
+  if (view.kind === 'admin') return <AdminPanel onExit={back} />
+
   if (view.kind === 'teacher')
     return (
       <div className="school school-choice">
@@ -149,6 +141,24 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
         <button className="choice-big" disabled={busy} onClick={() => signIn(view.signed, view.code)}>
           <Bi he="להיכנס בעצמי" ru="Войти самому" />
         </button>
+        {view.person.admin && (
+          <button
+            className="choice-big admin-choice"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true)
+              try {
+                await adminLogin(view.person.id, view.code)
+                setView({ kind: 'admin' })
+              } catch {
+                setError('other')
+              }
+              setBusy(false)
+            }}
+          >
+            <Bi he="⚙️ פאנל ניהול" ru="⚙️ Панель управления" />
+          </button>
+        )}
         {error && <Bi he={ERRORS[error].he} ru={ERRORS[error].ru} className="error" />}
       </div>
     )

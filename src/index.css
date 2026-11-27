@@ -2200,3 +2200,263 @@ select {
 .school-bar .error {
   font-size: 0.9rem;
 }
+
+/* Student home (portal) */
+#root:has(.portal),
+#root:has(.admin) {
+  max-width: 1100px;
+}
+.portal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+.portal-top {
+  display: flex;
+  justify-content: flex-start;
+}
+.portal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+.portal-tile {
+  background: var(--card);
+  border-radius: 26px;
+  box-shadow: var(--shadow);
+  padding: 26px 12px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+.portal-tile:active {
+  transform: translateY(3px);
+}
+.portal-icon {
+  font-size: 3.4rem;
+  line-height: 1;
+}
+.portal-empty {
+  margin-top: 24px;
+}
+.unit-body {
+  white-space: pre-wrap;
+  text-align: start;
+  font-size: 1.25rem;
+  line-height: 1.6;
+}
+.unit-link {
+  align-self: center;
+  text-decoration: none;
+  padding: 14px 32px;
+}
+.notes-area {
+  min-height: 55vh;
+  border-radius: 18px;
+  border: 2px solid #e6dccb;
+  padding: 16px;
+  font: inherit;
+  font-size: 1.3rem;
+  line-height: 1.6;
+  background: #fffdf6;
+}
+.notes-state {
+  color: var(--muted);
+}
+.notes-state.error {
+  color: var(--wrong);
+}
+.choice-big.admin-choice {
+  background: var(--ink);
+  color: white;
+}
+.choice-big.admin-choice .bi-ru {
+  color: #cfc6e0;
+}
+
+/* Admin panel (Hebrew only) */
+.admin {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.admin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.admin-head h1 {
+  margin: 0;
+  font-size: 1.7rem;
+}
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.admin-tab {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 700;
+  box-shadow: 0 3px 0 rgba(43, 33, 64, 0.1);
+}
+.admin-tab.on {
+  background: var(--ink);
+  color: white;
+}
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.admin-card {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 0 rgba(43, 33, 64, 0.08);
+  border-inline-start: 6px solid #d8cfbf;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.admin-card.on {
+  border-inline-start-color: var(--right);
+}
+.admin-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.admin-icon {
+  font-size: 2rem;
+}
+.admin-card-title {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+.switch input {
+  width: 22px;
+  height: 22px;
+}
+.soon {
+  background: #fff1dc;
+  color: #9a6a00;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.audience {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px dashed #e6dccb;
+  padding-top: 10px;
+}
+.audience-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.audience-label {
+  font-weight: 700;
+  margin-inline-end: 4px;
+}
+.chip-btn {
+  background: #f3ede2;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-weight: 600;
+}
+.chip-btn.small {
+  padding: 4px 10px;
+  font-size: 0.9rem;
+}
+.chip-btn.on {
+  background: var(--accent-2);
+  color: white;
+}
+.audience-students {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 6px;
+}
+.student-pick {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #faf6ee;
+}
+.student-pick.on {
+  background: #e4ecff;
+  font-weight: 700;
+}
+.warn {
+  color: #9a6a00;
+  font-weight: 600;
+  margin: 0;
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.admin-table th,
+.admin-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0e8da;
+  text-align: right;
+}
+.admin-table th {
+  background: #f3ede2;
+}
+.tag {
+  background: #f3ede2;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.85rem;
+}
+.tag.ok {
+  background: #e3f7ea;
+  color: #1d7a47;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 700;
+}
+.field input,
+.field textarea {
+  font: inherit;
+  font-weight: 400;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd2bf;
+}
+.admin-actions {
+  display: flex;
+  gap: 8px;
+}
+.btn.danger {
+  background: #ffe3e3;
+  color: #b3261e;
+}

@@ -38,9 +38,11 @@ type Props = {
   onPlan: () => void
   onLesson: (u: Unit) => void
   onSwitchUser: () => void
+  /** School users: back to their home screen. */
+  onPortal?: () => void
 }
 
-export function Home({ userName, onPlay, onSettings, onPlan, onLesson, onSwitchUser }: Props) {
+export function Home({ userName, onPlay, onSettings, onPlan, onLesson, onSwitchUser, onPortal }: Props) {
   const content = useContent()
   const [learner, setLearner] = useState<Learner | null>(null)
   useEffect(() => {
@@ -60,6 +62,11 @@ export function Home({ userName, onPlay, onSettings, onPlan, onLesson, onSwitchU
           <span className="who-avatar small">{userName.slice(0, 1)}</span>
           {userName} ⇄
         </button>
+        {onPortal && (
+          <button className="settings-btn" onClick={onPortal} aria-label={t('חזרה')}>
+            🏠
+          </button>
+        )}
         <button className="settings-btn" onClick={onSettings} aria-label={t('הגדרות')}>
           ⚙️
         </button>
