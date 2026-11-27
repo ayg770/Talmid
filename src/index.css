@@ -2778,3 +2778,303 @@ select {
   .school-badge { flex-direction: column; align-items: center; gap: 0; padding: 3px 12px; }
   .school-frame { padding-top: 38px; }
 }
+
+/* Teacher entry: progress board */
+.choice-big.progress-choice {
+  background: #e9f1ff;
+  border: 2px solid #b9cdfa;
+}
+
+/* Progress board */
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: right;
+}
+.row-gap {
+  display: flex;
+  gap: 8px;
+}
+.class-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.class-chip {
+  background: var(--card);
+  border: 2px solid #eadfcb;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.class-chip.on {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: white;
+  box-shadow: 0 3px 0 rgba(43, 33, 64, 0.15);
+}
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.stat {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 0 rgba(43, 33, 64, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat-num {
+  font-size: 1.6rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.stat-label {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.good { color: #1d7a47; }
+.mid { color: #9a6a00; }
+.bad { color: #c62f35; }
+.progress-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.count-badge {
+  background: var(--wrong);
+  color: white;
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 0.8rem;
+  margin-inline-start: 4px;
+}
+.sort-pick {
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.sort-pick select {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #e0d5c2;
+  background: var(--card);
+  color: var(--ink);
+}
+.progress-table td.num {
+  font-variant-numeric: tabular-nums;
+}
+.progress-row {
+  cursor: pointer;
+}
+.progress-row:hover td {
+  background: #fdf9f1;
+}
+.progress-row.open td {
+  background: #f4f7ff;
+}
+.progress-row.idle td {
+  color: var(--muted);
+}
+.p-name {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.progress-row.idle .p-name {
+  font-weight: 500;
+}
+.caret {
+  color: var(--muted);
+  width: 12px;
+  font-size: 0.8rem;
+}
+.tag.grey {
+  background: #eeeae4;
+  color: #8b8377;
+  font-weight: 500;
+}
+.stars-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+.stars-cell strong {
+  min-width: 46px;
+  font-variant-numeric: tabular-nums;
+}
+.mini-bar {
+  flex: 1;
+  height: 8px;
+  background: #f1eadd;
+  border-radius: 999px;
+  overflow: hidden;
+  min-width: 50px;
+}
+.mini-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ffc93c, #ff9f1c);
+  border-radius: 999px;
+}
+.pct {
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.pct.good { background: #e3f7ea; }
+.pct.mid { background: #fff1dc; }
+.pct.bad { background: #ffe4e4; }
+td.recent {
+  color: #1d7a47;
+  font-weight: 700;
+}
+.detail-row > td {
+  background: #f4f7ff;
+  padding: 4px 14px 14px;
+}
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.detail-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 6px;
+}
+.detail-table th {
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.detail-table th:first-child,
+.d-unit {
+  text-align: right;
+  font-weight: 600;
+}
+.detail-table .cell {
+  border-radius: 10px;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 0.85rem;
+  width: 22%;
+}
+.detail-table .cell strong {
+  display: block;
+  font-size: 0.95rem;
+}
+.cell.done {
+  background: #e3f7ea;
+  color: #1d7a47;
+}
+.cell.part {
+  background: #fff1dc;
+  color: #8a5f00;
+}
+.cell.none {
+  background: #f3efe8;
+  color: #b5ab9b;
+}
+.small {
+  font-size: 0.85rem;
+}
+.hard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.hard-item {
+  display: flex;
+  gap: 14px;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 0 rgba(43, 33, 64, 0.08);
+  align-items: center;
+}
+.hard-pct {
+  min-width: 92px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  padding: 8px 6px;
+}
+.hard-pct strong {
+  font-size: 1.5rem;
+}
+.hard-pct span {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.hard-pct.bad { background: #ffe4e4; }
+.hard-pct.mid { background: #fff1dc; }
+.hard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.hard-where {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-2);
+}
+.hard-q {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.hard-a {
+  color: #1d7a47;
+  font-size: 0.95rem;
+}
+@media (max-width: 700px) {
+  .stat-row { grid-template-columns: repeat(2, 1fr); }
+  .progress-table th:nth-child(3),
+  .progress-table td:nth-child(3),
+  .progress-table th:nth-child(5),
+  .progress-table td:nth-child(5) { display: none; }
+}
+
+/* Roster sync card */
+.sync-card.bad {
+  border-inline-start-color: var(--wrong);
+}
+.sync-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sync-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.sync-facts span {
+  background: #f3ede2;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.sync-facts .pos { background: #e3f7ea; color: #1d7a47; }
+.sync-facts .neg { background: #fff1dc; color: #8a5f00; }

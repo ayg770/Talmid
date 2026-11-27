@@ -4,6 +4,8 @@ import { getLang } from '../lib/i18n'
 import { Bi } from '../components/ui/Bi'
 import { AdminPanel } from './AdminPanel'
 import { adminLogin } from '../lib/portal'
+import { staffLogin } from '../lib/progress'
+import { ProgressBoard } from './ProgressBoard'
 import {
   Roster,
   SchoolError,
@@ -45,6 +47,7 @@ type View =
   | { kind: 'teacher'; person: SchoolPerson; signed: Signed; code: string }
   | { kind: 'ask-teacher'; person: SchoolPerson }
   | { kind: 'admin' }
+  | { kind: 'progress' }
 
 const asError = (e: unknown) => (typeof e === 'string' ? e : 'other') as SchoolError
 
@@ -108,6 +111,7 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
     )
 
   if (view.kind === 'admin') return <AdminPanel onExit={back} />
+  if (view.kind === 'progress') return <ProgressBoard onExit={back} />
 
   if (view.kind === 'teacher')
     return (
@@ -158,6 +162,23 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
         >
           <Bi he="🧪 כניסה כתלמיד בדיקה" ru="🧪 Войти как тестовый ученик" />
           <Bi he="לנסות את החומרים בלי נקודות לתלמיד אמיתי" ru="попробовать материалы без баллов настоящему ученику" className="choice-sub" />
+        </button>
+        <button
+          className="choice-big progress-choice"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true)
+            try {
+              await staffLogin(view.person.id, view.code)
+              setView({ kind: 'progress' })
+            } catch {
+              setError('other')
+            }
+            setBusy(false)
+          }}
+        >
+          <Bi he="📊 התקדמות התלמידים" ru="📊 Успехи учеников" />
+          <Bi he="כוכבים, נכונות ושאלות קשות לפי כיתה" ru="звёзды, точность и трудные вопросы по классам" className="choice-sub" />
         </button>
         {view.person.admin && (
           <button

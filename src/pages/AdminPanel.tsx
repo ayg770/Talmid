@@ -12,11 +12,13 @@ import {
   setAudience,
   setModule,
 } from '../lib/portal'
+import { RosterStatus, rosterStatus, syncRosterNow } from '../lib/progress'
+import { ProgressBoard } from './ProgressBoard'
 
 // The admin panel (Hebrew only, like the school system's): what students see after
 // signing in, learning units, and which teachers are admins.
 
-type Tab = 'modules' | 'units' | 'teachers'
+type Tab = 'modules' | 'units' | 'progress' | 'teachers' | 'roster'
 
 export function AdminPanel({ onExit }: { onExit: () => void }) {
   const [state, setState] = useState<AdminState | null>(null)
@@ -74,7 +76,9 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
           [
             ['modules', '🧭 מה התלמידים רואים'],
             ['units', '🧩 יחידות לימוד'],
+            ['progress', '📊 התקדמות'],
             ['teachers', '👩‍🏫 מורים ומנהלים'],
+            ['roster', '🔄 רשימת התלמידים'],
           ] as [Tab, string][]
         ).map(([id, label]) => (
           <button key={id} className={tab === id ? 'admin-tab on' : 'admin-tab'} onClick={() => setTab(id)}>
@@ -116,6 +120,10 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
       )}
 
       {tab === 'units' && <Units state={state} run={run} />}
+
+      {tab === 'progress' && <ProgressBoard asAdmin />}
+
+      {tab === 'roster' && <RosterSync onSynced={() => void reload()} />}
 
       {tab === 'teachers' && (
         <div className="admin-list">
@@ -331,6 +339,75 @@ function Units({ state, run }: { state: AdminState; run: (fn: () => Promise<unkn
         </section>
         </div>
       ))}
+    </div>
+  )
+}
+
+const when = (iso: string) =>
+  new Date(iso).toLocaleString('he-IL', { timeZone: 'Europe/Moscow', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })
+
+/** Students and teachers come from the cheder and timetable systems, every hour. */
+function RosterSync({ onSynced }: { onSynced: () => void }) {
+  const [status, setStatus] = useState<RosterStatus | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const load = () =>
+    rosterStatus()
+      .then(setStatus)
+      .catch((e: Error) => setError(e.message))
+  useEffect(() => {
+    void load()
+  }, [])
+  const last = status?.last
+  const failedLater = status?.error && (!last || status.error.at > last.at)
+  return (
+    <div className="admin-list">
+      <p className="muted">
+        רשימת התלמידים מתעדכנת לבד כל שעה ממערכת "חדר מנחם", והמורים — ממערכת לוח הזמנים. תלמיד שעזב לא נמחק: הוא מוסתר, והתשובות שלו נשמרות.
+        כיתות שאין באתר (גן, א׳) לא נכנסות.
+      </p>
+      <section className={`admin-card sync-card ${failedLater ? 'bad' : 'on'}`}>
+        <div className="sync-head">
+          <div>
+            <strong>{last ? `עודכן לאחרונה: ${when(last.at)}` : 'עוד לא עודכן'}</strong>
+            {last && (
+              <div className="sync-facts">
+                <span>{last.students} תלמידים במקור</span>
+                <span>{last.teachers} מורים</span>
+                <span className={last.added ? 'pos' : ''}>+{last.added} חדשים</span>
+                <span>{last.updated} שינויי שם/כיתה</span>
+                <span className={last.left ? 'neg' : ''}>{last.left} הוסתרו</span>
+              </div>
+            )}
+          </div>
+          <button
+            className="btn primary"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true)
+              setError(null)
+              try {
+                await syncRosterNow()
+                await load()
+                onSynced()
+              } catch (e) {
+                setError(e instanceof Error ? e.message : String(e))
+                await load()
+              }
+              setBusy(false)
+            }}
+          >
+            {busy ? 'מעדכן…' : '🔄 לעדכן עכשיו'}
+          </button>
+        </div>
+        {failedLater && (
+          <p className="error">
+            העדכון האחרון נכשל ({when(status!.error!.at)}): {status!.error!.error}
+          </p>
+        )}
+        {status && <p className="muted small">מוסתרים כרגע (עזבו או לא במקור): {status.inactive}</p>}
+      </section>
+      {error && <p className="error">{error}</p>}
     </div>
   )
 }
