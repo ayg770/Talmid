@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 // screen appears at once, and is refreshed in the background.
 
 export type SchoolClass = { id: string; he: string; ru: string }
-export type SchoolPerson = { id: string; kind: 'student' | 'teacher'; class: string | null; name: string; has_code: boolean; admin?: boolean }
+export type SchoolPerson = { id: string; kind: 'student' | 'teacher'; class: string | null; name: string; has_code: boolean; admin?: boolean; test?: boolean }
 export type OpenDevice = { teacher: string; until: string }
 export type Roster = { classes: SchoolClass[]; people: SchoolPerson[]; open: OpenDevice | null }
 export type Signed = { id: string; name: string; token?: string }

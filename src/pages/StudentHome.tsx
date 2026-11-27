@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bi } from '../components/ui/Bi'
-import { HomeUnit, MyHome, loadNote, saveNote } from '../lib/portal'
+import { HomeUnit, MyHome, loadNote, saveNote, testReset } from '../lib/portal'
 import { Answer, StoryUnit, passed } from './StoryUnit'
 import { supabase } from '../lib/supabase'
 
@@ -35,7 +35,7 @@ export function StudentHome({
       />
     )
   if (open.kind === 'unit') return <UnitView unit={open.unit} onBack={() => setOpen({ kind: 'units' })} />
-  if (open.kind === 'units') return <UnitList units={home.units} onBack={back} onOpen={(unit) => setOpen({ kind: 'unit', unit })} />
+  if (open.kind === 'units') return <UnitList units={home.units} test={!!home.test} onBack={back} onOpen={(unit) => setOpen({ kind: 'unit', unit })} />
 
   const tap = (key: string) => {
     if (key === 'reading') onReading()
@@ -142,15 +142,16 @@ function Notes({ userId, onBack }: { userId: string; onBack: () => void }) {
 }
 
 /** Units grouped by category; story units show the levels already passed as stars. */
-function UnitList({ units, onBack, onOpen }: { units: HomeUnit[]; onBack: () => void; onOpen: (u: HomeUnit) => void }) {
+function UnitList({ units, test, onBack, onOpen }: { units: HomeUnit[]; test: boolean; onBack: () => void; onOpen: (u: HomeUnit) => void }) {
   const [answers, setAnswers] = useState<Answer[]>([])
+  const [reload, setReload] = useState(0)
   useEffect(() => {
     void supabase
       ?.from('unit_answers')
       .select('unit_id, level, exercise, correct, ms')
       .order('created_at')
       .then(({ data }) => setAnswers((data as Answer[] | null) ?? []))
-  }, [])
+  }, [reload])
 
   const groups = new Map<string, { he: string; ru: string; units: HomeUnit[] }>()
   for (const u of units) {
@@ -170,6 +171,19 @@ function UnitList({ units, onBack, onOpen }: { units: HomeUnit[]; onBack: () => 
     <div className="portal">
       <PortalBar title={{ he: 'יחידות לימוד', ru: 'Учебные блоки' }} onBack={onBack} />
       {total > 0 && <Bi he={`⭐ ${total} כוכבים`} ru={`⭐ ${total} звёзд`} className="star-total" />}
+      {test && (
+        <div className="test-bar">
+          <Bi he="🧪 תלמיד בדיקה — ההתקדמות כאן לא שייכת לאף תלמיד" ru="🧪 Тестовый ученик — прогресс не идёт ни одному ученику" />
+          <button
+            className="close-btn"
+            onClick={() => {
+              if (confirm('לאפס את כל ההתקדמות של תלמיד הבדיקה?')) void testReset().then(() => setReload((r) => r + 1))
+            }}
+          >
+            <Bi he="🔄 איפוס" ru="🔄 Сброс" />
+          </button>
+        </div>
+      )}
       {units.length === 0 && <Bi he="עוד אין יחידות לימוד" ru="Учебных блоков пока нет" className="muted portal-empty" />}
       {[...groups.values()].map((g) => (
         <section key={g.he} className="unit-group">

@@ -196,7 +196,7 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
 
     const tap = async (p: SchoolPerson) => {
       if (p.kind === 'teacher') return setView({ kind: 'code', person: p })
-      if (!open) return setView({ kind: 'ask-teacher', person: p })
+      if (!open && !p.test) return setView({ kind: 'ask-teacher', person: p })
       setBusy(true)
       try {
         const signed = await enterStudent(p.id, getLang())
@@ -223,7 +223,7 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
         </div>
         <FitGrid count={people.length} longest={Math.max(...people.map((p) => p.name.length), 4)}>
           {people.map((p) => (
-            <button key={p.id} className="school-name" disabled={busy} onClick={() => void tap(p)}>
+            <button key={p.id} className={p.test ? 'school-name test' : 'school-name'} disabled={busy} onClick={() => void tap(p)}>
               <span dir="auto">{p.name}</span>
             </button>
           ))}

@@ -2722,3 +2722,19 @@ select {
   font-weight: 800;
   color: #b07d00;
 }
+.school-name.test {
+  border: 3px dashed #b06ad9;
+  color: #7a3fa3;
+  background: #f7efff;
+}
+.test-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: #f7efff;
+  border: 2px dashed #b06ad9;
+  border-radius: 16px;
+  padding: 10px 16px;
+  font-weight: 700;
+}

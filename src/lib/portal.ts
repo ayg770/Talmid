@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 
 export type HomeModule = { key: string; he: string; ru: string; icon: string }
 export type HomeUnit = { id: string; title: string; body: string; link: string | null; kind?: 'basic' | 'story'; content?: StoryContent | null; category_he?: string | null; category_ru?: string | null }
-export type MyHome = { name: string; kind: 'student' | 'teacher'; admin: boolean; modules: HomeModule[]; units: HomeUnit[] }
+export type MyHome = { name: string; kind: 'student' | 'teacher'; admin: boolean; test?: boolean; modules: HomeModule[]; units: HomeUnit[] }
 
 /** null: not a school user (they keep the reading app as their home). */
 export async function myHome(): Promise<MyHome | null> {
@@ -110,3 +110,10 @@ export const saveUnit = (unit: AdminUnit) => call<string>('admin_save_unit', { p
 export const deleteUnit = (id: string) => call('admin_delete_unit', { p_unit: id })
 export const setAdmin = (person: string, admin: boolean) => call('admin_set_admin', { p_person: person, p_admin: admin })
 export const resetCode = (person: string) => call('admin_reset_code', { p_person: person })
+
+/** The test student starts over (its answers are deleted). */
+export async function testReset(): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase.rpc('test_reset')
+  if (error) throw new Error(error.message)
+}
