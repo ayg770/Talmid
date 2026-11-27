@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 // screen appears at once, and is refreshed in the background.
 
 export type SchoolClass = { id: string; he: string; ru: string }
-export type SchoolPerson = { id: string; kind: 'student' | 'teacher'; class: string | null; name: string; has_code: boolean; admin?: boolean; test?: boolean }
+export type SchoolPerson = { id: string; kind: 'student' | 'teacher'; class: string | null; name: string; has_code: boolean; admin?: boolean }
 export type OpenDevice = { teacher: string; until: string }
 export type Roster = { classes: SchoolClass[]; people: SchoolPerson[]; open: OpenDevice | null }
 export type Signed = { id: string; name: string; token?: string }
@@ -107,3 +107,7 @@ export const enterStudent = (person: string, language: string) =>
 
 /** Sign-ins made through an open device carry a long token instead of a personal code. */
 export const isDeviceToken = (code: string) => code.length >= 32
+
+/** A teacher (with their code) enters as the test student, whose points belong to no one. */
+export const enterAsTest = (teacher: string, code: string, language: string) =>
+  call<Signed>('school_test_enter', { p_person: teacher, p_code: code, p_language: language })

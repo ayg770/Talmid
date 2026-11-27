@@ -11,6 +11,7 @@ import {
   Signed,
   cachedRoster,
   closeDevice,
+  enterAsTest,
   enterStudent,
   isDeviceToken,
   loadRoster,
@@ -141,6 +142,23 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
         <button className="choice-big" disabled={busy} onClick={() => signIn(view.signed, view.code)}>
           <Bi he="להיכנס בעצמי" ru="Войти самому" />
         </button>
+        <button
+          className="choice-big test-choice"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true)
+            try {
+              const signed = await enterAsTest(view.person.id, view.code, getLang())
+              signIn(signed, signed.token!)
+            } catch (e) {
+              setError(asError(e))
+              setBusy(false)
+            }
+          }}
+        >
+          <Bi he="🧪 כניסה כתלמיד בדיקה" ru="🧪 Войти как тестовый ученик" />
+          <Bi he="לנסות את החומרים בלי נקודות לתלמיד אמיתי" ru="попробовать материалы без баллов настоящему ученику" className="choice-sub" />
+        </button>
         {view.person.admin && (
           <button
             className="choice-big admin-choice"
@@ -196,7 +214,7 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
 
     const tap = async (p: SchoolPerson) => {
       if (p.kind === 'teacher') return setView({ kind: 'code', person: p })
-      if (!open && !p.test) return setView({ kind: 'ask-teacher', person: p })
+      if (!open) return setView({ kind: 'ask-teacher', person: p })
       setBusy(true)
       try {
         const signed = await enterStudent(p.id, getLang())
@@ -223,7 +241,7 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
         </div>
         <FitGrid count={people.length} longest={Math.max(...people.map((p) => p.name.length), 4)}>
           {people.map((p) => (
-            <button key={p.id} className={p.test ? 'school-name test' : 'school-name'} disabled={busy} onClick={() => void tap(p)}>
+            <button key={p.id} className="school-name" disabled={busy} onClick={() => void tap(p)}>
               <span dir="auto">{p.name}</span>
             </button>
           ))}
