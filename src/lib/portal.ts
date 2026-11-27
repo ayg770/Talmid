@@ -1,10 +1,11 @@
+import type { StoryContent } from '../pages/StoryUnit'
 import { supabase } from './supabase'
 import { createClient } from '@supabase/supabase-js'
 
 // The student's home (portal) and the admin panel that decides what is on it.
 
 export type HomeModule = { key: string; he: string; ru: string; icon: string }
-export type HomeUnit = { id: string; title: string; body: string; link: string | null }
+export type HomeUnit = { id: string; title: string; body: string; link: string | null; kind?: 'basic' | 'story'; content?: StoryContent | null }
 export type MyHome = { name: string; kind: 'student' | 'teacher'; admin: boolean; modules: HomeModule[]; units: HomeUnit[] }
 
 /** null: not a school user (they keep the reading app as their home). */

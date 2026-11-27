@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bi } from '../components/ui/Bi'
 import { HomeUnit, MyHome, loadNote, saveNote } from '../lib/portal'
+import { StoryUnit } from './StoryUnit'
 
 // A school user's home: the tiles the admin chose for them. "reading" opens the
 // reading app (its own screens); the rest open here.
@@ -22,6 +23,16 @@ export function StudentHome({
   const back = () => setOpen({ kind: 'tiles' })
 
   if (open.kind === 'notes') return <Notes userId={userId} onBack={back} />
+  if (open.kind === 'unit' && open.unit.kind === 'story' && open.unit.content)
+    return (
+      <StoryUnit
+        title={open.unit.title}
+        unitId={open.unit.id}
+        userId={userId}
+        content={open.unit.content}
+        onBack={() => setOpen({ kind: 'units' })}
+      />
+    )
   if (open.kind === 'unit') return <UnitView unit={open.unit} onBack={() => setOpen({ kind: 'units' })} />
   if (open.kind === 'units')
     return (
@@ -33,7 +44,7 @@ export function StudentHome({
           <div className="portal-grid">
             {home.units.map((u) => (
               <button key={u.id} className="portal-tile unit-tile" onClick={() => setOpen({ kind: 'unit', unit: u })}>
-                <span className="portal-icon">🧩</span>
+                <span className="portal-icon">{u.kind === 'story' ? '📖' : '🧩'}</span>
                 <span className="portal-title" dir="auto">
                   {u.title}
                 </span>
