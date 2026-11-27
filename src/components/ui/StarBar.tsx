@@ -4,12 +4,15 @@ import {
   ANIMALS,
   SCENES,
   STARS_PER_ANIMAL,
+  animalName,
   animalsEarned,
   dismissNewAnimal,
   sceneAt,
+  stationsReached,
   useStars,
 } from '../../lib/stars'
 import { Confetti } from './Confetti'
+import { Pet } from './Pet'
 
 const SCENES_COUNT = SCENES.length
 import { t } from '../../lib/i18n'
@@ -36,8 +39,8 @@ export function StarBar() {
 
   const inRow = stars % STARS_PER_ANIMAL
   const earned = animalsEarned(stars)
-  const arrived = earned < SCENES_COUNT
-  const last = earned ? ANIMALS[earned - 1] : null
+  const stations = stationsReached(stars)
+  const arrived = stations < SCENES_COUNT
 
   return (
     <>
@@ -54,19 +57,19 @@ export function StarBar() {
         </span>
         {arrived ? (
           <span className="star-next" title={t('התחנה הבאה')}>
-            {sceneAt(earned + 1)}
+            {sceneAt(stations + 1)}
           </span>
         ) : (
           <span className="star-next earned">🏆</span>
         )}
-        {last && <span className="star-last">{last.emoji}</span>}
+        {earned > 0 && <Pet index={earned - 1} className="star-last" />}
       </div>
-      {newAnimal && <NewAnimal emoji={newAnimal.emoji} scene={newScene} onClose={dismissNewAnimal} />}
+      {newAnimal && <NewAnimal index={ANIMALS.indexOf(newAnimal)} scene={newScene} onClose={dismissNewAnimal} />}
     </>
   )
 }
 
-function NewAnimal({ emoji, scene, onClose }: { emoji: string; scene: string | null; onClose: () => void }) {
+function NewAnimal({ index, scene, onClose }: { index: number; scene: string | null; onClose: () => void }) {
   useEffect(() => {
     sfx.finish()
     const t = setTimeout(onClose, 5000)
@@ -77,24 +80,33 @@ function NewAnimal({ emoji, scene, onClose }: { emoji: string; scene: string | n
       <Confetti fire={1} big />
       <div className="new-animal-card">
         {scene && <span className="new-scene">{scene}</span>}
-        <span className="new-animal-emoji">{emoji}</span>
+        <Pet index={index} className="new-animal-pet" />
+        <span className="new-animal-name">{animalName(ANIMALS[index])}</span>
         <span className="new-animal-stars">⭐⭐⭐</span>
       </div>
     </div>
   )
 }
 
-/** All the animals: earned ones in color, the rest as silhouettes. */
+/** All the friends: earned ones in color with their name, the rest faded with the stars they need. */
 export function AnimalCollection() {
   const { stars } = useStars()
   const earned = animalsEarned(stars)
   return (
     <div className="collection" aria-label={t('האוסף שלי')}>
-      {ANIMALS.map((a, i) => (
-        <span key={a.emoji} className={i < earned ? 'col-animal on' : 'col-animal'} title={i < earned ? t(a.name) : ''}>
-          {a.emoji}
-        </span>
-      ))}
+      {ANIMALS.map((a, i) => {
+        const state = i < earned ? 'on' : i === earned ? 'next' : ''
+        return (
+          <span key={a.id} className={`col-animal ${state}`}>
+            <Pet index={i} />
+            {i < earned ? (
+              <span className="col-name">{animalName(a)}</span>
+            ) : (
+              <span className="col-stars">{(i + 1) * STARS_PER_ANIMAL} ⭐</span>
+            )}
+          </span>
+        )
+      })}
     </div>
   )
 }

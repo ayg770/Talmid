@@ -163,6 +163,25 @@ export async function loadSessions(limit = 15): Promise<SessionRow[]> {
   return data ?? []
 }
 
+/** How many rounds of each game were played since the start of this week (Sunday). */
+export async function loadWeekCounts(): Promise<Record<string, number>> {
+  const userId = await getLearnerId()
+  if (!supabase || !userId) return {}
+  const sunday = new Date()
+  sunday.setHours(0, 0, 0, 0)
+  sunday.setDate(sunday.getDate() - sunday.getDay())
+  const { data, error } = await supabase
+    .from('game_sessions')
+    .select('game_type')
+    .eq('user_id', userId)
+    .gt('total_questions', 0)
+    .gte('started_at', sunday.toISOString())
+  if (error) console.warn('supabase: could not load this week', error)
+  const counts: Record<string, number> = {}
+  for (const r of data ?? []) counts[r.game_type] = (counts[r.game_type] ?? 0) + 1
+  return counts
+}
+
 export async function startSession(gameType: string): Promise<string | null> {
   const userId = await getLearnerId()
   if (!supabase || !userId) return null
