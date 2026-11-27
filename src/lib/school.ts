@@ -107,3 +107,7 @@ export const enterStudent = (person: string, language: string) =>
 
 /** Sign-ins made through an open device carry a long token instead of a personal code. */
 export const isDeviceToken = (code: string) => code.length >= 32
+
+/** A teacher (with their code) enters as the test student, whose points belong to no one. */
+export const enterAsTest = (teacher: string, code: string, language: string) =>
+  call<Signed>('school_test_enter', { p_person: teacher, p_code: code, p_language: language })

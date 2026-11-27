@@ -12,6 +12,7 @@ import {
   Signed,
   cachedRoster,
   closeDevice,
+  enterAsTest,
   enterStudent,
   isDeviceToken,
   loadRoster,
@@ -141,6 +142,23 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
         </button>
         <button className="choice-big" disabled={busy} onClick={() => signIn(view.signed, view.code)}>
           <Bi he="להיכנס בעצמי" ru="Войти самому" />
+        </button>
+        <button
+          className="choice-big test-choice"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true)
+            try {
+              const signed = await enterAsTest(view.person.id, view.code, getLang())
+              signIn(signed, signed.token!)
+            } catch (e) {
+              setError(asError(e))
+              setBusy(false)
+            }
+          }}
+        >
+          <Bi he="🧪 כניסה כתלמיד בדיקה" ru="🧪 Войти как тестовый ученик" />
+          <Bi he="לנסות את החומרים בלי נקודות לתלמיד אמיתי" ru="попробовать материалы без баллов настоящему ученику" className="choice-sub" />
         </button>
         {view.person.admin && (
           <button

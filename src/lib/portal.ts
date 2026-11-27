@@ -1,11 +1,12 @@
+import type { StoryContent } from '../pages/StoryUnit'
 import { supabase } from './supabase'
 import { createClient } from '@supabase/supabase-js'
 
 // The student's home (portal) and the admin panel that decides what is on it.
 
 export type HomeModule = { key: string; he: string; ru: string; icon: string }
-export type HomeUnit = { id: string; title: string; body: string; link: string | null }
-export type MyHome = { name: string; kind: 'student' | 'teacher'; admin: boolean; modules: HomeModule[]; units: HomeUnit[] }
+export type HomeUnit = { id: string; title: string; body: string; link: string | null; kind?: 'basic' | 'story'; content?: StoryContent | null; category_he?: string | null; category_ru?: string | null }
+export type MyHome = { name: string; kind: 'student' | 'teacher'; admin: boolean; test?: boolean; modules: HomeModule[]; units: HomeUnit[] }
 
 /** null: not a school user (they keep the reading app as their home). */
 export async function myHome(): Promise<MyHome | null> {
@@ -38,7 +39,17 @@ export async function saveNote(userId: string, body: string): Promise<void> {
 export type AdminModule = { key: string; title_he: string; title_ru: string; icon: string; enabled: boolean; ready: boolean }
 export type Target = { target: 'all' } | { target: 'class' | 'student'; id: string }
 export type AudienceRow = { kind: 'module' | 'unit'; key: string; target: Target['target']; id: string | null }
-export type AdminUnit = { id?: string; title: string; body: string; link: string | null; published: boolean; sort_order: number }
+export type AdminUnit = {
+  id?: string
+  title: string
+  body: string
+  link: string | null
+  published: boolean
+  sort_order: number
+  kind?: 'basic' | 'story'
+  category_he?: string | null
+  category_ru?: string | null
+}
 export type AdminPerson = { id: string; kind: 'student' | 'teacher'; class: string | null; name: string; admin: boolean; has_code: boolean }
 export type AdminState = {
   me: string
@@ -99,3 +110,10 @@ export const saveUnit = (unit: AdminUnit) => call<string>('admin_save_unit', { p
 export const deleteUnit = (id: string) => call('admin_delete_unit', { p_unit: id })
 export const setAdmin = (person: string, admin: boolean) => call('admin_set_admin', { p_person: person, p_admin: admin })
 export const resetCode = (person: string) => call('admin_reset_code', { p_person: person })
+
+/** The test student starts over (its answers are deleted). */
+export async function testReset(): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase.rpc('test_reset')
+  if (error) throw new Error(error.message)
+}
