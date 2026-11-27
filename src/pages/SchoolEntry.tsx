@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { getAccounts, forgetAccount, rememberAccount, switchAccount } from '../lib/account'
 import { getLang } from '../lib/i18n'
 import { Bi } from '../components/ui/Bi'
+import { Landscape } from '../components/ui/Landscape'
 import { AdminPanel } from './AdminPanel'
 import { adminLogin } from '../lib/portal'
 import {
@@ -252,6 +253,7 @@ export function SchoolEntry({ onOther, notice }: { onOther: () => void; notice?:
           <Bi he="🔒 הכניסה לתלמידים סגורה — מורה פותח אותה עם הקוד שלו" ru="🔒 Вход для учеников закрыт — учитель открывает его своим кодом" />
         </div>
       )}
+      <Landscape />
       <Bi he="מי נכנס? בחרו כיתה" ru="Кто входит? Выберите класс" className="school-title" />
       {error && <Bi he={ERRORS[error].he} ru={ERRORS[error].ru} className="error" />}
       <div className="class-grid">

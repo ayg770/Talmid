@@ -72,7 +72,6 @@ export function Home({ userName, onPlay, onSettings, onPlan, onLesson, onSwitchU
     void loadUnitProgress().then(setProgress)
     void loadWeekCounts().then(setWeek)
   }, [])
-  useSkyPage()
 
   const next = progress ? nextUnit(progress) : null
   const stage = next ? STAGES.find((s) => s.units.includes(next)) : null
@@ -208,12 +207,4 @@ function Ring({ frac, color, children }: { frac: number; color: string; children
       <span className="ring-in">{children}</span>
     </span>
   )
-}
-
-/** The home and sign-in screens sit in the open sky; the games keep the plain page. */
-export function useSkyPage() {
-  useEffect(() => {
-    document.body.classList.add('sky-page')
-    return () => document.body.classList.remove('sky-page')
-  }, [])
 }

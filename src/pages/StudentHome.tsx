@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bi } from '../components/ui/Bi'
 import { HomeUnit, MyHome, loadNote, saveNote } from '../lib/portal'
+import { Landscape } from '../components/ui/Landscape'
 
 // A school user's home: the tiles the admin chose for them. "reading" opens the
 // reading app (its own screens); the rest open here.
@@ -59,6 +60,7 @@ export function StudentHome({
         </button>
       </div>
       <Bi he={`שלום, ${home.name.split(' ')[0]}!`} ru={`Привет, ${home.name.split(' ')[0]}!`} className="school-title" />
+      <Landscape />
       <div className="portal-grid">
         {home.modules.map((m) => (
           <button key={m.key} className="portal-tile" onClick={() => tap(m.key)}>
