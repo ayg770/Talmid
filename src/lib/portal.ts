@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 // The student's home (portal) and the admin panel that decides what is on it.
 
 export type HomeModule = { key: string; he: string; ru: string; icon: string }
-export type HomeUnit = { id: string; title: string; body: string; link: string | null; kind?: 'basic' | 'story'; content?: StoryContent | null }
+export type HomeUnit = { id: string; title: string; body: string; link: string | null; kind?: 'basic' | 'story'; content?: StoryContent | null; category_he?: string | null; category_ru?: string | null }
 export type MyHome = { name: string; kind: 'student' | 'teacher'; admin: boolean; modules: HomeModule[]; units: HomeUnit[] }
 
 /** null: not a school user (they keep the reading app as their home). */
@@ -39,7 +39,17 @@ export async function saveNote(userId: string, body: string): Promise<void> {
 export type AdminModule = { key: string; title_he: string; title_ru: string; icon: string; enabled: boolean; ready: boolean }
 export type Target = { target: 'all' } | { target: 'class' | 'student'; id: string }
 export type AudienceRow = { kind: 'module' | 'unit'; key: string; target: Target['target']; id: string | null }
-export type AdminUnit = { id?: string; title: string; body: string; link: string | null; published: boolean; sort_order: number }
+export type AdminUnit = {
+  id?: string
+  title: string
+  body: string
+  link: string | null
+  published: boolean
+  sort_order: number
+  kind?: 'basic' | 'story'
+  category_he?: string | null
+  category_ru?: string | null
+}
 export type AdminPerson = { id: string; kind: 'student' | 'teacher'; class: string | null; name: string; admin: boolean; has_code: boolean }
 export type AdminState = {
   me: string

@@ -25,7 +25,7 @@ const PASS = 0.85
 const FAST_MS = 7000
 const TIMED_MS = 8000
 
-type Answer = { level: Level; exercise: string; correct: boolean; ms: number }
+export type Answer = { level: Level; exercise: string; correct: boolean; ms: number; unit_id?: string }
 
 function shuffle<T>(a: T[]): T[] {
   const r = [...a]
@@ -37,7 +37,7 @@ function shuffle<T>(a: T[]): T[] {
 }
 
 /** Passed a level: the latest answer to each of its exercises, enough right and fast. */
-function passed(content: StoryContent, answers: Answer[], level: Level): boolean {
+export function passed(content: StoryContent, answers: Answer[], level: Level): boolean {
   const ids = content.levels[level].map((e) => e.id)
   const latest = new Map<string, Answer>()
   for (const a of answers) if (a.level === level) latest.set(a.exercise, a)

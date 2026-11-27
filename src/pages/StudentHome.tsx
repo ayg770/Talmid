@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bi } from '../components/ui/Bi'
 import { HomeUnit, MyHome, loadNote, saveNote } from '../lib/portal'
-import { StoryUnit } from './StoryUnit'
+import { Answer, StoryUnit, passed } from './StoryUnit'
+import { supabase } from '../lib/supabase'
 
 // A school user's home: the tiles the admin chose for them. "reading" opens the
 // reading app (its own screens); the rest open here.
@@ -34,26 +35,7 @@ export function StudentHome({
       />
     )
   if (open.kind === 'unit') return <UnitView unit={open.unit} onBack={() => setOpen({ kind: 'units' })} />
-  if (open.kind === 'units')
-    return (
-      <div className="portal">
-        <PortalBar title={{ he: 'יחידות לימוד', ru: 'Учебные блоки' }} onBack={back} />
-        {home.units.length === 0 ? (
-          <Bi he="עוד אין יחידות לימוד" ru="Учебных блоков пока нет" className="muted portal-empty" />
-        ) : (
-          <div className="portal-grid">
-            {home.units.map((u) => (
-              <button key={u.id} className="portal-tile unit-tile" onClick={() => setOpen({ kind: 'unit', unit: u })}>
-                <span className="portal-icon">{u.kind === 'story' ? '📖' : '🧩'}</span>
-                <span className="portal-title" dir="auto">
-                  {u.title}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    )
+  if (open.kind === 'units') return <UnitList units={home.units} onBack={back} onOpen={(unit) => setOpen({ kind: 'unit', unit })} />
 
   const tap = (key: string) => {
     if (key === 'reading') onReading()
@@ -155,6 +137,56 @@ function Notes({ userId, onBack }: { userId: string; onBack: () => void }) {
           <Bi he="✓ נשמר" ru="✓ Сохранено" />
         )}
       </span>
+    </div>
+  )
+}
+
+/** Units grouped by category; story units show the levels already passed as stars. */
+function UnitList({ units, onBack, onOpen }: { units: HomeUnit[]; onBack: () => void; onOpen: (u: HomeUnit) => void }) {
+  const [answers, setAnswers] = useState<Answer[]>([])
+  useEffect(() => {
+    void supabase
+      ?.from('unit_answers')
+      .select('unit_id, level, exercise, correct, ms')
+      .order('created_at')
+      .then(({ data }) => setAnswers((data as Answer[] | null) ?? []))
+  }, [])
+
+  const groups = new Map<string, { he: string; ru: string; units: HomeUnit[] }>()
+  for (const u of units) {
+    const key = u.category_he ?? ''
+    if (!groups.has(key)) groups.set(key, { he: u.category_he ?? 'כללי', ru: u.category_ru ?? 'Общее', units: [] })
+    groups.get(key)!.units.push(u)
+  }
+  const stars = (u: HomeUnit) => {
+    if (u.kind !== 'story' || !u.content) return null
+    const mine = answers.filter((a) => a.unit_id === u.id)
+    const n = (['easy', 'medium', 'hard'] as const).filter((l) => passed(u.content!, mine, l)).length
+    return '⭐'.repeat(n) + '☆'.repeat(3 - n)
+  }
+  const total = units.reduce((s, u) => s + (stars(u)?.split('⭐').length ?? 1) - 1, 0)
+
+  return (
+    <div className="portal">
+      <PortalBar title={{ he: 'יחידות לימוד', ru: 'Учебные блоки' }} onBack={onBack} />
+      {total > 0 && <Bi he={`⭐ ${total} כוכבים`} ru={`⭐ ${total} звёзд`} className="star-total" />}
+      {units.length === 0 && <Bi he="עוד אין יחידות לימוד" ru="Учебных блоков пока нет" className="muted portal-empty" />}
+      {[...groups.values()].map((g) => (
+        <section key={g.he} className="unit-group">
+          {groups.size > 1 || g.he !== 'כללי' ? <Bi he={g.he} ru={g.ru} className="group-title" /> : null}
+          <div className="portal-grid">
+            {g.units.map((u) => (
+              <button key={u.id} className="portal-tile unit-tile" onClick={() => onOpen(u)}>
+                <span className="portal-icon">{u.kind === 'story' ? '📖' : '🧩'}</span>
+                <span className="portal-title" dir="auto">
+                  {u.title}
+                </span>
+                {stars(u) && <span className="unit-stars">{stars(u)}</span>}
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   )
 }

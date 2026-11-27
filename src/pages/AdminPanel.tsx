@@ -251,6 +251,19 @@ function Units({ state, run }: { state: AdminState; run: (fn: () => Promise<unkn
             כותרת
             <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} dir="auto" />
           </label>
+          <div className="field-row">
+            <label className="field">
+              קטגוריה (עברית)
+              <input value={editing.category_he ?? ''} onChange={(e) => setEditing({ ...editing, category_he: e.target.value })} placeholder="רוסית" />
+            </label>
+            <label className="field">
+              קטגוריה (רוסית)
+              <input value={editing.category_ru ?? ''} onChange={(e) => setEditing({ ...editing, category_ru: e.target.value })} dir="ltr" placeholder="Русский язык" />
+            </label>
+          </div>
+          {editing.kind === 'story' && <p className="muted">📖 יחידת סיפור עם תרגילים בשלוש רמות. את הסיפור והתרגילים מכינים יחד עם Claude.</p>}
+          {editing.kind !== 'story' && (
+          <>
           <label className="field">
             תוכן / הסבר לתלמיד
             <textarea rows={8} value={editing.body} onChange={(e) => setEditing({ ...editing, body: e.target.value })} dir="auto" />
@@ -259,6 +272,8 @@ function Units({ state, run }: { state: AdminState; run: (fn: () => Promise<unkn
             קישור (לא חובה) — דף עבודה, סרטון, משחק
             <input value={editing.link ?? ''} onChange={(e) => setEditing({ ...editing, link: e.target.value })} dir="ltr" placeholder="https://…" />
           </label>
+          </>
+          )}
           <label className="switch">
             <input type="checkbox" checked={editing.published} onChange={(e) => setEditing({ ...editing, published: e.target.checked })} />
             <span>{editing.published ? 'מפורסם לתלמידים' : 'טיוטה (לא מוצג)'}</span>
@@ -290,10 +305,12 @@ function Units({ state, run }: { state: AdminState; run: (fn: () => Promise<unkn
       <button className="btn primary" onClick={() => setEditing({ title: '', body: '', link: null, published: false, sort_order: state.units.length })}>
         + יחידה חדשה
       </button>
-      {state.units.map((u) => (
-        <section key={u.id} className={`admin-card ${u.published ? 'on' : ''}`}>
+      {state.units.map((u, k) => (
+        <div key={u.id} className="admin-unit-wrap">
+        {(k === 0 || state.units[k - 1].category_he !== u.category_he) && <h3 className="admin-group">{u.category_he ?? 'ללא קטגוריה'}</h3>}
+        <section className={`admin-card ${u.published ? 'on' : ''}`}>
           <div className="admin-card-head">
-            <span className="admin-icon">🧩</span>
+            <span className="admin-icon">{u.kind === 'story' ? '📖' : '🧩'}</span>
             <div className="admin-card-title">
               <strong dir="auto">{u.title}</strong>
               <span className="muted">{u.published ? 'מפורסם' : 'טיוטה'}</span>
@@ -312,6 +329,7 @@ function Units({ state, run }: { state: AdminState; run: (fn: () => Promise<unkn
           </div>
           <AudienceEditor state={state} value={targetsOf(state, 'unit', u.id!)} onChange={(t) => void run(() => setAudience('unit', u.id!, t))} />
         </section>
+        </div>
       ))}
     </div>
   )

@@ -2687,3 +2687,38 @@ select {
 .exercise .choice.wrong {
   background: #ffe3e3;
 }
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.admin-group {
+  margin: 10px 0 2px;
+  font-size: 1.2rem;
+}
+.admin-unit-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.unit-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.group-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  align-self: flex-start;
+  align-items: flex-start;
+}
+.unit-stars {
+  font-size: 1.3rem;
+  letter-spacing: 2px;
+  color: #e0a100;
+}
+.star-total {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #b07d00;
+}
