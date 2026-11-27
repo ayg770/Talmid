@@ -20,6 +20,7 @@ import { Selection, saveSelection } from './lib/selection'
 import { GameId, Home } from './pages/Home'
 import { Settings } from './pages/Settings'
 import { Welcome } from './pages/Welcome'
+import { SchoolEntry } from './pages/SchoolEntry'
 import { getLearner } from './lib/supabase'
 
 /** Games that start with choosing what to play (single syllables or a group). */
@@ -71,7 +72,7 @@ export default function App() {
     })
   }, [account])
 
-  if (!account) return <Welcome />
+  if (!account) return <SignIn />
   if (boot === 'loading') return <div className="game loading">…</div>
   if (boot === 'invalid') return <Welcome error={t('לא הצלחנו להיכנס בתור {name}. אולי הקוד הוחלף או שאין חיבור — נסו להיכנס שוב.', { name: account.name })} />
 
@@ -184,4 +185,11 @@ export default function App() {
       onSwitchUser={() => switchAccount(null)}
     />
   )
+}
+
+/** Not signed in: the school's front door, or the regular sign-in for everyone else. */
+function SignIn() {
+  const [other, setOther] = useState(false)
+  if (other) return <Welcome onSchool={() => setOther(false)} />
+  return <SchoolEntry onOther={() => setOther(true)} />
 }

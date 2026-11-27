@@ -1947,3 +1947,199 @@ select {
   padding: 2px 14px;
   box-shadow: 0 2px 0 rgba(43, 33, 64, 0.1);
 }
+
+/* School front door: classes → names → code. Hebrew and Russian side by side. */
+.bi {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+}
+.bi-ru {
+  font-size: 0.72em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.school {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  text-align: center;
+}
+.school-title {
+  font-size: clamp(1.5rem, 5vw, 2.2rem);
+  font-weight: 800;
+  align-self: center;
+}
+.class-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+.class-tile {
+  background: var(--card);
+  border-radius: 24px;
+  padding: 18px 8px 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.class-tile:active,
+.school-name:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(43, 33, 64, 0.12);
+}
+.class-letter {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: grid;
+  place-items: center;
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.class-tile:nth-child(6n + 2) .class-letter { background: var(--accent-2); }
+.class-tile:nth-child(6n + 3) .class-letter { background: var(--right); }
+.class-tile:nth-child(6n + 4) .class-letter { background: #b06ad9; }
+.class-tile:nth-child(6n + 5) .class-letter { background: #e0a100; }
+.class-tile:nth-child(6n + 6) .class-letter { background: var(--wrong); }
+.school-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.teacher-tile {
+  flex-direction: row;
+  padding: 14px 28px;
+  background: var(--ink);
+  color: white;
+}
+.teacher-tile .bi-ru {
+  color: #cfc6e0;
+}
+
+/* Names fill the screen: no scrolling, the grid picks the columns */
+.school-names {
+  height: calc(100dvh - 32px);
+  gap: 10px;
+}
+.school-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.school-bar .school-title {
+  flex: 1;
+  font-size: clamp(1.3rem, 4vw, 1.9rem);
+}
+.school-back {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 8px 14px;
+  font-weight: 700;
+  box-shadow: 0 3px 0 rgba(43, 33, 64, 0.12);
+}
+.fit-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: 8px;
+}
+.school-name {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 0 rgba(43, 33, 64, 0.12);
+  font-size: 1em;
+  font-weight: 700;
+  padding: 2px 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Code pad */
+.school-code {
+  align-items: center;
+}
+.school-code .school-bar {
+  align-self: stretch;
+}
+.code-who {
+  font-size: clamp(2rem, 8vw, 3rem);
+  font-weight: 800;
+}
+.code-prompt {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.code-dots {
+  display: flex;
+  gap: 16px;
+  margin: 4px 0;
+}
+.code-dots .dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+}
+.code-dots .dot.on {
+  background: var(--ink);
+}
+.code-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 84px);
+  gap: 12px;
+}
+.code-pad button {
+  height: 72px;
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 2rem;
+  font-weight: 800;
+}
+.code-pad button:active {
+  transform: translateY(3px);
+}
+.code-pad .pad-clear {
+  font-size: 1.5rem;
+  color: var(--muted);
+}
+.school .error {
+  color: var(--wrong);
+  font-weight: 700;
+}
+.key-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  max-width: 420px;
+  align-self: center;
+  width: 100%;
+}
+.key-input {
+  font-size: 2rem;
+  text-align: center;
+  letter-spacing: 0.3em;
+}
+.school-link {
+  margin-top: 8px;
+}
+#root:has(.school-names),
+#root:has(.school-classes) {
+  max-width: 1100px;
+}

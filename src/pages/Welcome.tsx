@@ -9,7 +9,7 @@ import { t } from '../lib/i18n'
 type Mode = 'pick' | 'new' | 'login'
 
 /** Who is reading? Pick a user on this device, create one, or sign in to an existing one. */
-export function Welcome({ error }: { error?: string | null }) {
+export function Welcome({ error, onSchool }: { error?: string | null; onSchool?: () => void }) {
   const accounts = getAccounts()
   const [mode, setMode] = useState<Mode>(accounts.length ? 'pick' : 'new')
 
@@ -43,6 +43,11 @@ export function Welcome({ error }: { error?: string | null }) {
       )}
       {mode === 'new' && <NewUser onBack={accounts.length ? () => setMode('pick') : undefined} onLogin={() => setMode('login')} />}
       {mode === 'login' && <Login onBack={() => setMode(accounts.length ? 'pick' : 'new')} />}
+      {onSchool && (
+        <button className="link school-link" onClick={onSchool}>
+          {t('כניסה לתלמידי בית הספר')}
+        </button>
+      )}
     </div>
   )
 }
